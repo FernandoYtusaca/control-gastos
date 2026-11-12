@@ -1,58 +1,131 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Control de Gastos API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST para gestionar ingresos y gastos personales, construida con **Laravel 13**. Cada usuario administra sus propias categorías y transacciones, y puede consultar un resumen mensual de su balance.
 
-## About Laravel
+## Características
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Registro, login y logout con tokens (Laravel Sanctum)
+- CRUD de categorías (ingreso / gasto)
+- CRUD de transacciones con filtros por mes, año, categoría y tipo
+- Resumen mensual: total de ingresos, gastos, balance y detalle por categoría
+- Cada usuario solo accede a sus propios datos
+- Validaciones y reglas de negocio (por ejemplo, no se puede eliminar una categoría con transacciones)
+- Tests automatizados con PHPUnit
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tecnologías
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.3+ y Laravel 13
+- MySQL / MariaDB
+- Laravel Sanctum
+- PHPUnit
 
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Instalación
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/[tu-usuario]/control-gastos.git
+cd control-gastos
+composer install
+cp .env.example .env
+php artisan key:generate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Crea una base de datos llamada `control_gastos` y configura el `.env`:
 
-## Contributing
+```
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=control_gastos
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Ejecuta las migraciones y levanta el servidor:
 
-## Code of Conduct
+```bash
+php artisan migrate
+php artisan serve
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+La API queda disponible en `http://127.0.0.1:8000/api`.
 
-## Security Vulnerabilities
+## Endpoints
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Todas las peticiones deben incluir el header `Accept: application/json`. Las rutas protegidas requieren `Authorization: Bearer {token}`.
 
-## License
+| Método | Ruta | Descripción | Auth |
+|---|---|---|---|
+| POST | `/api/register` | Crear cuenta | No |
+| POST | `/api/login` | Iniciar sesión | No |
+| POST | `/api/logout` | Cerrar sesión | Sí |
+| GET | `/api/user` | Datos del usuario autenticado | Sí |
+| GET | `/api/categories` | Listar categorías | Sí |
+| POST | `/api/categories` | Crear categoría | Sí |
+| GET | `/api/categories/{id}` | Ver categoría | Sí |
+| PUT | `/api/categories/{id}` | Editar categoría | Sí |
+| DELETE | `/api/categories/{id}` | Eliminar categoría | Sí |
+| GET | `/api/transactions` | Listar transacciones (paginadas) | Sí |
+| POST | `/api/transactions` | Crear transacción | Sí |
+| GET | `/api/transactions/{id}` | Ver transacción | Sí |
+| PUT | `/api/transactions/{id}` | Editar transacción | Sí |
+| DELETE | `/api/transactions/{id}` | Eliminar transacción | Sí |
+| GET | `/api/summary` | Resumen mensual | Sí |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Filtros de transacciones
+
+`GET /api/transactions?month=11&year=2026&category_id=1&type=expense`
+
+Todos los parámetros son opcionales y se pueden combinar.
+
+### Ejemplo: crear una transacción
+
+```http
+POST /api/transactions
+Authorization: Bearer {token}
+Accept: application/json
+
+{
+  "category_id": 1,
+  "amount": 35.50,
+  "description": "Almuerzo",
+  "date": "2026-11-05"
+}
+```
+
+### Ejemplo: resumen mensual
+
+`GET /api/summary?month=11&year=2026`
+
+```json
+{
+  "month": 11,
+  "year": 2026,
+  "total_income": 2500,
+  "total_expense": 35.5,
+  "balance": 2464.5,
+  "by_category": [
+    { "category_id": 2, "name": "Sueldo", "type": "income", "total": "2500.00" },
+    { "category_id": 1, "name": "Comida", "type": "expense", "total": "35.50" }
+  ]
+}
+```
+
+## Modelo de datos
+
+- `users`: id, name, email, password
+- `categories`: id, user_id, name, type (`income` / `expense`)
+- `transactions`: id, user_id, category_id, amount, description, date
+
+Un usuario tiene muchas categorías y transacciones; una categoría tiene muchas transacciones.
+
+## Tests
+
+```bash
+php artisan test
+```
+
+Los tests usan una base de datos SQLite en memoria, por lo que no afectan a tu base de datos de desarrollo.
+
+## Autor
+
+Saúl Fernando Ytusaca Quispe: https://www.linkedin.com/in/saul-fernando-ytusaca-quispe
