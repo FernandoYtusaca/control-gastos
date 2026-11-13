@@ -22,7 +22,7 @@ API REST para gestionar ingresos y gastos personales, construida con **Laravel 1
 ## Instalación
 
 ```bash
-git clone https://github.com/[tu-usuario]/control-gastos.git
+git clone https://github.com/FernandoYtusaca/control-gastos.git
 cd control-gastos
 composer install
 cp .env.example .env
